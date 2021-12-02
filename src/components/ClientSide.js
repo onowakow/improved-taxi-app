@@ -89,7 +89,7 @@ const ClientSide = ({
           )}
         </Col>
         <Col>
-          <Ride request={request} />
+          <Ride request={request} isDriver={false} isDispatch={false}/>
         </Col>
       </Row>
 

@@ -3,11 +3,11 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
-import Button from 'react-bootstrap/Button'
-import Alert from 'react-bootstrap/Alert'
+import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
 
 const DispatchSide = ({
-  request,
+  rides,
   drivers,
   assignDriver,
   submitAssignDriver,
@@ -20,34 +20,37 @@ const DispatchSide = ({
           <Row>
             <h1>Dispatch</h1>
           </Row>
-          {request ? 
-            <Row>
-              <Col>
-                <h2>Ride request:</h2>
-                {request.pickupLocation && request.dropoffLocation ? (
+          {
+            /*If there are rides, render list*/ rides ? (
+              <Row>
+                <Col>
+                  <h2>All rides:</h2>
                   <>
-                    <Ride request={request}>
-                      <Form onSubmit={submitAssignDriver}>
-                        <Form.Select onChange={assignDriver}>
-                          <option>Assign driver to ride</option>
-                          {drivers.map((driver, i) => (
-                            <option key={i}>{driver}</option>
-                          ))}
-                        </Form.Select>
-                        <Button type='submit'>Assign driver</Button>
-                      </Form>
-                    </Ride>
-                    {alert ?
-                      <Alert variant={alert.variant}>{alert.value}</Alert>
-                      : null
-                    }
+                    {/* Map rides, displaying each ride with an assign driver form. */}
+                    {rides.map(ride => (
+                      <div key={ride.rideId}>
+                        <Ride request={ride} isDriver={false} isDispatch={true}>
+                          <Form onSubmit={submitAssignDriver}>
+                            <Form.Select onChange={assignDriver}>
+                              <option>Assign driver to ride</option>
+                              {drivers.map((driver, i) => (
+                                <option key={i}>{driver}</option>
+                              ))}
+                            </Form.Select>
+                            <Button type="submit">Assign driver</Button>
+                          </Form>
+                        </Ride>
+                        {alert ? (
+                          <Alert variant={alert.variant}>{alert.value}</Alert>
+                        ) : null}
+                      </div>
+                    ))}
                   </>
-                ) : (
-                  "No current ride"
-                )}
-              </Col>
-            </Row>
-          : <p>No current rides </p>  
+                </Col>
+              </Row>
+            ) : (
+              <p>No current rides </p>
+            )
           }
 
           <Row>

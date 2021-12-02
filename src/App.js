@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "react-bootstrap/Navbar";
 import Container from "react-bootstrap/Container";
@@ -18,12 +18,15 @@ const App = () => {
     dropoffTime: undefined,
     driverAssigned: undefined,
   }
+  
 
   // State hooks with names ending in 'value' represent dynamic (onChange) hooks
   const [pickupValue, setPickupValue] = useState("Classroom");
   const [dropoffValue, setDropoffValue] = useState("Classroom");
-  // Request holds a full request object
-  const [request, setRequest] = useState(requestInitialState);
+  // Request holds a single ride object.
+  const [request, setRequest] = useState( requestInitialState );
+  // Rides holds a list of rides, updated from the server.
+  const [rides, setRides] = useState({ rides: [] })
   const [page, setPage] = useState(0);
   const [name, setName] = useState("");
   // alert is for ClientSide specifically.
@@ -33,6 +36,33 @@ const App = () => {
   const [drivers, setDrivers] = useState(["432", "421"]);
   // Holds a driver assignment until the form is submitted, adding the driver to a ride obj
   const [assignedDriver, setAssignedDriver] = useState(null);
+
+  console.log('rides state:', rides);
+
+  // loads all rides currently saved in server
+  const loadRides = async () => {
+    console.log('loadRides called')
+    const query = `query {
+      rideList {
+        rideId riderName pickupLocation
+        dropoffLocation timeRequested
+        pickupTime dropoffTime driverAssigned
+      }
+    }`
+
+    const response = await fetch('/graphql', {
+      method: 'POST',
+      headers: { 'Content-type': 'application/json' },
+      body: JSON.stringify({ query })
+    })
+    const result = await response.json();
+    setRides({ rides: result.data.rideList })
+  }
+
+  // Calls once, similar to ComponentDidMount. Loads all rides.
+  useEffect(() => {
+    loadRides()
+  }, [])
 
   // Array of service locations
   const locationsPlusCodes = {
@@ -66,34 +96,25 @@ const App = () => {
   const handleNewRideSubmit = (event) => {
     event.preventDefault();
 
-    
-
+    // Update request state by modifying blank template
     const newRequest = modifyValueOfRequestByPropertyValueObj({
       rideId: Math.floor(Math.random() * 10000) + 1,
       riderName: name,
       pickupLocation: pickupValue,
       dropoffLocation: dropoffValue,
     })
-
     setRequest(newRequest)
 
-    /*
-    // Copy request
-    const newReq = Object.assign({}, request)
-    // Modify copy to include new information
-    newReq.rideId = Math.floor(Math.random() * 10000) + 1
-    newReq.riderName = name
-    newReq.pickupLocation = pickupValue
-    newReq.dropoffLocation = dropoffValue
+    // Concatinate Rides state. Holds list of rides (request holds single ride)
+    setRides({ rides: rides.rides.concat(newRequest) })
 
-    setRequest(newReq)
-    */
-
+    // Successful ride booking
     setAlert({
       variant: "success",
       value: "Your ride was successfully booked.",
     });
     setTimeout(() => setAlert(null), 5000);
+
   };
 
   const handlePageClick = (value) => {
@@ -168,7 +189,7 @@ const App = () => {
         />
       ) : page === 1 ? (
         <DispatchSide
-          request={request}
+          rides={rides.rides}
           drivers={drivers}
           assignDriver={assignDriver}
           submitAssignDriver={submitAssignDriver}
