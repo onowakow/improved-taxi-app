@@ -15,9 +15,9 @@ const Ride = ({ request, children }) => {
             Ride for customer {request.riderName}
           </Card.Title>
           <Card.Text>
-            Pickup at: {request.pickup}
+            Pickup at: {request.pickupLocation}
           </Card.Text>
-          <Card.Text>Dropoff at: {request.dropoff}</Card.Text>
+          <Card.Text>Dropoff at: {request.dropoffLocation}</Card.Text>
           {/* Wrapper contents below */}
           <div>
             {children}

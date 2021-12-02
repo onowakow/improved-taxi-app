@@ -24,14 +24,14 @@ const DispatchSide = ({
             <Row>
               <Col>
                 <h2>Ride request:</h2>
-                {request.pickup && request.dropoff ? (
+                {request.pickupLocation && request.dropoffLocation ? (
                   <>
                     <Ride request={request}>
                       <Form onSubmit={submitAssignDriver}>
                         <Form.Select onChange={assignDriver}>
                           <option>Assign driver to ride</option>
-                          {drivers.map((driver) => (
-                            <option>{driver}</option>
+                          {drivers.map((driver, i) => (
+                            <option key={i}>{driver}</option>
                           ))}
                         </Form.Select>
                         <Button type='submit'>Assign driver</Button>

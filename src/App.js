@@ -8,11 +8,22 @@ import DriverSide from "./components/DriverSide";
 import DispatchSide from "./components/DispatchSide";
 
 const App = () => {
+  const requestInitialState = {
+    rideId: undefined,
+    riderName: undefined,
+    pickupLocation: undefined,
+    dropoffLocation: undefined,
+    timeRequested: undefined,
+    pickupTime: undefined,
+    dropoffTime: undefined,
+    driverAssigned: undefined,
+  }
+
   // State hooks with names ending in 'value' represent dynamic (onChange) hooks
   const [pickupValue, setPickupValue] = useState("Classroom");
   const [dropoffValue, setDropoffValue] = useState("Classroom");
   // Request holds a full request object
-  const [request, setRequest] = useState(null);
+  const [request, setRequest] = useState(requestInitialState);
   const [page, setPage] = useState(0);
   const [name, setName] = useState("");
   // alert is for ClientSide specifically.
@@ -30,25 +41,14 @@ const App = () => {
     Walmart: "8F25+MP",
   };
 
-  // Request class. Instantiated for eact new ride
-  class Request {
-    constructor(
-      RideID,
-      pickupLocation,
-      dropoffLocation,
-      timeRequested,
-      pickupTime,
-      dropoffTime,
-      driverAssigned
-    ) {
-      this.RideID = RideID;
-      this.pickupLocation = pickupLocation;
-      this.dropoffLocation = dropoffLocation;
-      this.timeRequested = timeRequested;
-      this.pickupTime = pickupTime;
-      this.dropoffTime = dropoffTime;
-      this.driverAssigned = driverAssigned;
+  // Non-mutating change to request obj. Returns new request obj. 
+  const modifyValueOfRequestByPropertyValueObj = (propertyValueObj) => {
+    const newRequest = Object.assign({}, request)
+    for (const property in propertyValueObj) {
+      newRequest[property] = propertyValueObj[property]
     }
+
+    return newRequest
   }
 
   const handlePickupChange = (event) => {
@@ -66,11 +66,28 @@ const App = () => {
   const handleNewRideSubmit = (event) => {
     event.preventDefault();
 
-    setRequest({
+    
+
+    const newRequest = modifyValueOfRequestByPropertyValueObj({
+      rideId: Math.floor(Math.random() * 10000) + 1,
       riderName: name,
-      pickup: pickupValue,
-      dropoff: dropoffValue,
-    });
+      pickupLocation: pickupValue,
+      dropoffLocation: dropoffValue,
+    })
+
+    setRequest(newRequest)
+
+    /*
+    // Copy request
+    const newReq = Object.assign({}, request)
+    // Modify copy to include new information
+    newReq.rideId = Math.floor(Math.random() * 10000) + 1
+    newReq.riderName = name
+    newReq.pickupLocation = pickupValue
+    newReq.dropoffLocation = dropoffValue
+
+    setRequest(newReq)
+    */
 
     setAlert({
       variant: "success",
