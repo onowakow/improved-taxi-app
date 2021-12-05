@@ -1,0 +1,34 @@
+scalar GraphQLDate
+
+"Like Ride, but without server-generated input"
+input RideInputs {
+  riderName: String!
+  pickupLocation: String!
+  dropoffLocation: String!
+  pickupTime: GraphQLDate
+  dropoffTime: GraphQLDate
+  driver: String
+}
+
+type Ride {
+  rideId: Int!
+  riderName: String!
+  pickupLocation: String!
+  dropoffLocation: String!
+  timeRequested: GraphQLDate
+  pickupTime: GraphQLDate
+  dropoffTime: GraphQLDate
+  driver: String
+}
+
+
+##### Top-level queries below
+type Query {
+  about: String!
+  rideList: [Ride!]!
+}
+
+type Mutation {
+  setAboutMessage(message: String!): String
+  rideAdd(ride: RideInputs!): Ride!
+}

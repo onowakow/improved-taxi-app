@@ -1,0 +1,7 @@
+PUT http://localhost:3002/api/rides/672
+content-type: application/json
+
+{
+  "driver": "421",
+  "pickupTime": "2021-12-04T16:45:23.000Z"
+}

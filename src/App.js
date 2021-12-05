@@ -6,6 +6,10 @@ import Button from "react-bootstrap/Button";
 import ClientSide from "./components/ClientSide";
 import DriverSide from "./components/DriverSide";
 import DispatchSide from "./components/DispatchSide";
+import axios from 'axios'
+import rideServices from "./utilities/rideServices";
+
+const baseUrl = 'http://localhost:3002/api/rides'
 
 const App = () => {
   const requestInitialState = {
@@ -16,53 +20,55 @@ const App = () => {
     timeRequested: undefined,
     pickupTime: undefined,
     dropoffTime: undefined,
-    driverAssigned: undefined,
+    driver: undefined,
   }
   
+  //############   State Hooks   ###############
+  // Rides holds a list of rides, updated from the server.
+  const [rides, setRides] = useState([])
 
-  // State hooks with names ending in 'value' represent dynamic (onChange) hooks
+  // User input. Updated on change. Upon submit, formed into an object for 'rides'
   const [pickupValue, setPickupValue] = useState("Classroom");
   const [dropoffValue, setDropoffValue] = useState("Classroom");
-  // Request holds a single ride object.
-  const [request, setRequest] = useState( requestInitialState );
-  // Rides holds a list of rides, updated from the server.
-  const [rides, setRides] = useState({ rides: [] })
-  const [page, setPage] = useState(0);
   const [name, setName] = useState("");
+  const [assignedDriver, setAssignedDriver] = useState(null);
+
+  // Request holds a single ride object for client app
+  const [request, setRequest] = useState( requestInitialState );
+
+  // Changes app in use (client, dispatch, driver). App will later be split into different apps.
+  const [page, setPage] = useState(0);
+
   // alert is for ClientSide specifically.
   const [alert, setAlert] = useState(null);
   const [dispatchAlert, setDispatchAlert] = useState(null);
+
+  //############   State Hooks(end)   ###############
+
   // Drivers currently static. Eventually will account for dynamic.
-  const [drivers, setDrivers] = useState(["432", "421"]);
-  // Holds a driver assignment until the form is submitted, adding the driver to a ride obj
-  const [assignedDriver, setAssignedDriver] = useState(null);
+  const drivers = ["432", "421"];
 
-  console.log('rides state:', rides);
+  console.log(rides)
 
-  // loads all rides currently saved in server
-  const loadRides = async () => {
-    console.log('loadRides called')
-    const query = `query {
-      rideList {
-        rideId riderName pickupLocation
-        dropoffLocation timeRequested
-        pickupTime dropoffTime driverAssigned
-      }
-    }`
-
-    const response = await fetch('/graphql', {
-      method: 'POST',
-      headers: { 'Content-type': 'application/json' },
-      body: JSON.stringify({ query })
-    })
-    const result = await response.json();
-    setRides({ rides: result.data.rideList })
+  const getAllRides = () => {
+    rideServices.getAll()
+      .then(response => {
+        setRides(response.data)
+      })
   }
 
-  // Calls once, similar to ComponentDidMount. Loads all rides.
+  // Using getAllRides() in here leads to 'missing dependency' error. Research has yet to turn up why. 
   useEffect(() => {
-    loadRides()
+    rideServices.getAll()
+      .then(response => {
+        setRides(response.data)
+      })
   }, [])
+
+  const copyRideById = (id) => {
+    const ride = rides.find(ride => ride.rideId === id)
+    return ride
+  }
 
   // Array of service locations
   const locationsPlusCodes = {
@@ -70,16 +76,6 @@ const App = () => {
     Downtown: "8C63+FG",
     Walmart: "8F25+MP",
   };
-
-  // Non-mutating change to request obj. Returns new request obj. 
-  const modifyValueOfRequestByPropertyValueObj = (propertyValueObj) => {
-    const newRequest = Object.assign({}, request)
-    for (const property in propertyValueObj) {
-      newRequest[property] = propertyValueObj[property]
-    }
-
-    return newRequest
-  }
 
   const handlePickupChange = (event) => {
     setPickupValue(event.target.value);
@@ -96,19 +92,19 @@ const App = () => {
   const handleNewRideSubmit = (event) => {
     event.preventDefault();
 
-    // Update request state by modifying blank template
-    const newRequest = modifyValueOfRequestByPropertyValueObj({
-      rideId: Math.floor(Math.random() * 10000) + 1,
+    const rideObj = {
       riderName: name,
       pickupLocation: pickupValue,
-      dropoffLocation: dropoffValue,
-    })
-    setRequest(newRequest)
+      dropoffLocation: dropoffValue
+    }
+    
+    rideServices.create(rideObj)
+      .then(response => {
+        console.log(response)
+      })
 
-    // Concatinate Rides state. Holds list of rides (request holds single ride)
-    setRides({ rides: rides.rides.concat(newRequest) })
+    getAllRides()
 
-    // Successful ride booking
     setAlert({
       variant: "success",
       value: "Your ride was successfully booked.",
@@ -129,8 +125,9 @@ const App = () => {
     setAssignedDriver(event.target.value);
   };
 
-  const submitAssignDriver = (event) => {
+  const submitAssignDriver = (event, id) => {
     event.preventDefault();
+    // Check if default option of dropdown was chosen
     if (!assignedDriver) {
       setDispatchAlert({
         variant: "danger",
@@ -139,12 +136,58 @@ const App = () => {
 
       setTimeout(() => setDispatchAlert(null), 5000);
     } else {
-      const driverObj = { driver: assignedDriver };
-      const requestCopy = Object.assign({}, request, driverObj);
-      console.log("requestCopy", requestCopy);
-      setRequest(requestCopy);
+      const driverObj = {driver: assignedDriver}
+      rideServices.update(id, driverObj)
+        .then(response => {
+          console.log(response)
+        })
+      
+      getAllRides()
+
     }
   };
+
+  const handleDeleteRide = (id) => {
+    rideServices.destroy(id)
+      .then(response => {
+        console.log(response)
+        getAllRides()
+      })
+  }
+
+  // pickup work here
+  const handlePickup = (id) => {
+    // Local time string
+    const pickup = { pickupTime: new Date().toLocaleTimeString()}
+
+    // Copy ride by id
+    const rideCopy = copyRideById(id)
+    const updatedRide = Object.assign({}, rideCopy, pickup)
+
+    // Replace old ride with new ride in array
+    const updatedRideArray = rides.rides.map(ride => ride.rideId === id 
+      ? updatedRide
+      : ride)
+
+    // Update state
+    setRides({ rides: updatedRideArray})
+  }
+  
+  const handleDropoff = (id) => {
+    console.log('handleDropoff called')
+    const dropoff = { dropoffTime: new Date().toLocaleTimeString()}
+
+    const rideCopy = copyRideById(id)
+    const updatedRide = Object.assign({}, rideCopy, dropoff)
+
+    // Replace old ride with new ride
+    const updatedRideArray = rides.rides.map(ride => ride.rideId === id
+      ? updatedRide 
+      : ride)
+    
+    // Update state
+    setRides({rides: updatedRideArray})
+  }
 
   return (
     <div>
@@ -189,14 +232,20 @@ const App = () => {
         />
       ) : page === 1 ? (
         <DispatchSide
-          rides={rides.rides}
+          rides={rides}
           drivers={drivers}
           assignDriver={assignDriver}
           submitAssignDriver={submitAssignDriver}
           alert={dispatchAlert}
+          handleDeleteRide={handleDeleteRide}
         />
       ) : page === 2 ? (
-        <DriverSide />
+        <DriverSide 
+          handleDeleteRide={handleDeleteRide}
+          rides={rides.rides}
+          handlePickup={handlePickup}
+          handleDropoff={handleDropoff}
+        />
       ) : (
         <p>Error: no page selected</p>
       )}
