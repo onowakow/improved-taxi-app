@@ -1,12 +1,17 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const app = express()
+const Ride = require('./models/ride')
+
 
 // Allow cross origin resource sharing
 app.use(cors())
 
 // JSON parser used for adding data to server
 app.use(express.json())
+
+// Import mongoose module
 
 let ridesDB = [
   {
@@ -35,8 +40,16 @@ let ridesDB = [
 
 // Index page
 app.get('/', (request, response) => {
-  response.send('Hello, world!')
+  response.send('This is the index page for the ride server')
 })
+
+// Test api person. DELETE LATER
+app.get('/api/persons', (request, response) => {
+  Person.find({}).then(result => {
+    response.json(result)
+  })
+})
+
 
 // Return full json object
 app.get('/api/rides', (request, response) => {

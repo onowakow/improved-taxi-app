@@ -7,8 +7,6 @@ if (process.argv.length < 3) {
 
 const password = process.argv[2]
 
-console.log(password)
-
 const url = `
   mongodb://owen:${password}@cluster0-shard-00-00.23a4d.mongodb.net:27017,cluster0-shard-00-01.23a4d.mongodb.net:27017,cluster0-shard-00-02.23a4d.mongodb.net:27017/rideTestDB?ssl=true&replicaSet=atlas-rmjgyh-shard-0&authSource=admin&retryWrites=true&w=majority
 `
@@ -21,15 +19,25 @@ const personSchema = new mongoose.Schema({
   isMale: Boolean,
 })
 
-const Person = mongoose.Schema('Person', personSchema)
+const Person = mongoose.model('Person', personSchema)
 
+/*
 const person = new Person({
-  name: "Owen",
-  birthDate: new Date(1998, 10, 8),
-  isMale: true,
+  name: "Josie",
+  birthDate: new Date(2000, 3, 26),
+  isMale: false,
 })
+
 
 person.save().then(result => {
   console.log('Person saved.')
+  mongoose.connection.close()
+}
+*/
+
+Person.find({ isMale: false }).then(result => {
+  result.forEach(person => {
+    console.log(person)
+  })
   mongoose.connection.close()
 })
