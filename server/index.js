@@ -17,6 +17,7 @@ let ridesDB = [
     timeRequested: new Date(2021, 11, 4, 10, 36, 59),
     pickupTime: new Date(2021, 11, 4, 10, 45, 23),
     dropoffTime: new Date(2021, 11, 4, 11, 5, 51),
+    status: [2, 'Ride complete'],
     driver: "419",
   },
   {
@@ -26,7 +27,8 @@ let ridesDB = [
     dropoffLocation: "Downtown",
     timeRequested: new Date(2021, 11, 4, 9, 24, 12),
     pickupTime: new Date(2021, 11, 4, 9, 35, 10),
-    dropoffTime: new Date(2021, 11, 4, 9, 39, 42),
+    dropoffTime: null,
+    status: [1, 'Driving to destination'],
     driver: "421",
   },
 ];
@@ -65,13 +67,15 @@ app.post('/api/rides', (request, response) => {
 
   const rideObj = {
     rideId: newId,
+    inTransit: false,
     riderName: ride.riderName,
     pickupLocation: ride.pickupLocation,
     dropoffLocation: ride.dropoffLocation,
     timeRequested: new Date(),
-    pickupTime: undefined,
-    dropoffTime: undefined,
-    driver: undefined,
+    pickupTime: null,
+    dropoffTime: null,
+    status: [0, 'Awaiting pickup'],
+    driver: null,
   }
   ridesDB = ridesDB.concat(rideObj)
   response.json(rideObj)

@@ -17,4 +17,6 @@ const destroy = (id) => {
   return axios.delete(`${baseUrl}/${id}`)
 }
 
-export default { getAll, create, update, destroy }
+const obj = { getAll, create, update, destroy }
+
+export default obj

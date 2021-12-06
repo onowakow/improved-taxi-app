@@ -1,6 +1,5 @@
 import Ride from "./Ride";
 // Extra info pertaining to dispatch. a child of ride
-import DispatchRideInfo from "./DispatchRideInfo";
 import AssignDriverForm from './AssignDriverForm'
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -31,9 +30,8 @@ const DispatchSide = ({
                     {/* Map rides, displaying each ride with an assign driver form. */}
                     {rides.map((ride) => (
                       <div key={ride.rideId}>
-                        <Ride request={ride} handleDeleteRide={handleDeleteRide}>
+                        <Ride ride={ride} handleDeleteRide={handleDeleteRide}>
                           <>
-                            <DispatchRideInfo pickupTime={ride.pickupTime} dropoffTime={ride.dropoffTime} />
                             <AssignDriverForm 
                               id={ride.rideId}
                               driver={ride.driver}
